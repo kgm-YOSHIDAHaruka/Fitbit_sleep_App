@@ -42,18 +42,23 @@ st.markdown("""
 > 例 「token_T001.json」 → 「token_Y001.json」
 > ※トークンファイル📂は `token_解析ID.json` という形式で保存されている必要があります。
 
+
 1. 関谷さんに作成いただいたOneDrive上のアカウント情報が保存されているフォルダのパスを入力してください。
-＞例…C:/Users/21005/OneDrive - KAGOME/ドキュメント/CGM\Fitbit_AP/PythonCode/TestData
+> 例…C:/Users/21005/OneDrive - KAGOME/ドキュメント/CGM\Fitbit_AP/PythonCode/TestData
+
 
 2. 取得したい期間（試験期間）を選択してください。
 
+
 3. 「一括取得＆ZIPでダウンロード」ボタンを押してください。
+
+
 
 """)
 
 start_date = st.date_input("取得開始日", value=date.today() - timedelta(days=7))
 end_date = st.date_input("取得終了日", value=date.today())
-token_dir = st.text_input("C:/Users/21005/OneDrive - KAGOME/ドキュメント/CGM/Fitbit_API/PythonCode/TestData", value="./tokens")
+token_dir = st.text_input("フォルダのパス", value="./tokens")
 
 if st.button("一括取得＆ZIPでダウンロード"):
     zip_buffer = io.BytesIO()
