@@ -30,8 +30,8 @@ def refresh_access_token(token_data):
     else:
         return None
 
-st.set_page_config(page_title="Fitbit睡眠データ一括取得", page_icon="📦")
-st.title("📦 Fitbit睡眠データ一括取得（管理者用）")
+st.set_page_config(page_title="Fitbit睡眠データ一括取得", page_icon="📊")
+st.title("📊 Fitbit睡眠データ一括取得")
 
 st.markdown("""
 このページでは、被験者のFitbitトークン（アカウント情報）をもとに、指定期間の睡眠データを一括取得します。
