@@ -53,8 +53,7 @@ st.markdown("""
 
 start_date = st.date_input("取得開始日", value=date.today() - timedelta(days=7))
 end_date = st.date_input("取得終了日", value=date.today())
-token_dir = st.text_input("C:/Users/21005/OneDrive - KAGOME/ドキュメント/CGM/Fitbit_API/PythonCode/TestData
-", value="./tokens")
+token_dir = st.text_input("C:/Users/21005/OneDrive - KAGOME/ドキュメント/CGM/Fitbit_API/PythonCode/TestData", value="./tokens")
 
 if st.button("一括取得＆ZIPでダウンロード"):
     zip_buffer = io.BytesIO()
