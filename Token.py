@@ -43,7 +43,7 @@ st.markdown("""
 > ※トークンファイル📂は `token_解析ID.json` という形式で保存されている必要があります。
 
 1. 関谷さんに作成いただいたOneDrive上のアカウント情報が保存されているフォルダのパスを入力してください。
-＞例…C:\Users\21005\OneDrive - KAGOME\ドキュメント\CGM\Fitbit_API\PythonCode\TestData
+＞例…C:/Users/21005/OneDrive - KAGOME/ドキュメント/CGM\Fitbit_AP/PythonCode/TestData
 
 2. 取得したい期間（試験期間）を選択してください。
 
