@@ -58,55 +58,51 @@ st.markdown("""
 start_date = st.date_input("取得開始日", value=date.today() - timedelta(days=7))
 end_date = st.date_input("取得終了日", value=date.today())
 token_dir = st.text_input("フォルダのパス", value="./tokens")
+uploaded_files = st.file_uploader("トークンファイル（複数選択可）をアップロード", type="json", accept_multiple_files=True)
 
-if st.button("一括取得＆ZIPでダウンロード"):
+if st.button("データ取得を開始"):
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
-        for file in os.listdir(token_dir):
-            if file.startswith("token_") and file.endswith(".json"):
-                user_id = file.replace("token_", "").replace(".json", "")
-                filepath = os.path.join(token_dir, file)
-                with open(filepath, "r", encoding="utf-8") as f:
-                    token_data = json.load(f)
+        for uploaded_file in uploaded_files:
+            user_id = uploaded_file.name.replace("token_", "").replace(".json", "")
+            token_data = json.load(uploaded_file)
 
-                # トークンの更新
-                token_data = refresh_access_token(token_data)
-                if not token_data:
-                    st.warning(f"{user_id} のトークン更新に失敗しました。スキップします。")
-                    continue
-                with open(filepath, "w", encoding="utf-8") as f:
-                    json.dump(token_data, f, ensure_ascii=False, indent=2)
+            # トークン更新
+            token_data = refresh_access_token(token_data)
+            if not token_data:
+                st.warning(f"{user_id} のトークン更新に失敗しました。スキップします。")
+                continue
 
-                access_token = token_data.get("access_token")
-                headers = {"Authorization": f"Bearer {access_token}"}
+            access_token = token_data.get("access_token")
+            headers = {"Authorization": f"Bearer {access_token}"}
+            all_days = []
 
-                all_days = []
-                for single_date in pd.date_range(start=start_date, end=end_date):
-                    date_str = single_date.strftime("%Y-%m-%d")
-                    url = f"https://api.fitbit.com/1.2/user/-/sleep/date/{date_str}.json"
-                    r = requests.get(url, headers=headers)
-                    d = r.json()
+            for single_date in pd.date_range(start=start_date, end=end_date):
+                date_str = single_date.strftime("%Y-%m-%d")
+                url = f"https://api.fitbit.com/1.2/user/-/sleep/date/{date_str}.json"
+                r = requests.get(url, headers=headers)
+                d = r.json()
 
-                    if "sleep" in d and len(d["sleep"]) > 0:
-                        s = d["sleep"][0]
-                        levels = s.get("levels", {}).get("summary", {})
-                        total = sum(level.get("minutes", 0) for level in levels.values())
-                        row = {
-                            "date": date_str,
-                            "sleep_score": s.get("efficiency"),
-                            "start_time": s.get("startTime"),
-                            "end_time": s.get("endTime")
-                        }
-                        for k in ["deep", "light", "rem", "wake"]:
-                            minutes = levels.get(k, {}).get("minutes", 0)
-                            row[f"{k}_minutes"] = minutes
-                            row[f"{k}_pct"] = round((minutes / total * 100), 1) if total > 0 else 0
-                        all_days.append(row)
+                if "sleep" in d and len(d["sleep"]) > 0:
+                    s = d["sleep"][0]
+                    levels = s.get("levels", {}).get("summary", {})
+                    total = sum(level.get("minutes", 0) for level in levels.values())
+                    row = {
+                        "date": date_str,
+                        "sleep_score": s.get("efficiency"),
+                        "start_time": s.get("startTime"),
+                        "end_time": s.get("endTime")
+                    }
+                    for k in ["deep", "light", "rem", "wake"]:
+                        minutes = levels.get(k, {}).get("minutes", 0)
+                        row[f"{k}_minutes"] = minutes
+                        row[f"{k}_pct"] = round((minutes / total * 100), 1) if total > 0 else 0
+                    all_days.append(row)
 
-                if all_days:
-                    df = pd.DataFrame(all_days)
-                    csv_bytes = df.to_csv(index=False).encode("utf-8-sig")
-                    zipf.writestr(f"{user_id}_sleep_data.csv", csv_bytes)
+            if all_days:
+                df = pd.DataFrame(all_days)
+                csv_bytes = df.to_csv(index=False).encode("utf-8-sig")
+                zipf.writestr(f"{user_id}_sleep_data.csv", csv_bytes)
 
     zip_buffer.seek(0)
     st.success("✅ データ取得が完了しました！以下からダウンロードしてください。")
