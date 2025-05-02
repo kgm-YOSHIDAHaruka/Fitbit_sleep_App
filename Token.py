@@ -91,8 +91,8 @@ if st.button("データ取得を開始"):
                     url = f"https://api.fitbit.com/1.2/user/-/sleep/date/{date_str}.json"
                     r = requests.get(url, headers=headers)
                     d = r.json()
-                    if "sleep" not in d or len(d["sleep"]) == 0:
-                        st.warning(f"{user_id} の {date_str} にデータがありませんでした。レスポンス: {d}")
+                    #if "sleep" not in d or len(d["sleep"]) == 0:
+                        #st.warning(f"{user_id} の {date_str} にデータがありませんでした。レスポンス: {d}")
 
                     if "sleep" in d and len(d["sleep"]) > 0:
                         s = d["sleep"][0]
