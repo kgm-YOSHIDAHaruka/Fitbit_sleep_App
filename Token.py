@@ -11,11 +11,17 @@ import zipfile
 import io
 import os
 from datetime import date, timedelta
+import base64
 
 def refresh_access_token(token_data):
     refresh_url = "https://api.fitbit.com/oauth2/token"
+    
+    # ✅ client_id:client_secret を base64 エンコード
+    credentials = f"{token_data['client_id']}:{token_data['client_secret']}"
+    credentials_b64 = base64.b64encode(credentials.encode()).decode()
+    
     headers = {
-        "Authorization": f"Basic {requests.auth._basic_auth_str(token_data['client_id'], token_data['client_secret'])}",
+        "Authorization": f"Basic {credentials_b64}",  # ← 修正済みの base64 文字列を使う
         "Content-Type": "application/x-www-form-urlencoded"
     }
     data = {
@@ -28,6 +34,7 @@ def refresh_access_token(token_data):
         token_data.update(new_token)
         return token_data
     else:
+        print("トークン更新失敗:", response.status_code, response.text)  # ← Debug出力（任意）
         return None
 
 st.set_page_config(page_title="Fitbit睡眠データ一括取得", page_icon="📊")
