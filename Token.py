@@ -37,16 +37,15 @@ st.markdown("""
 このページでは、被験者のFitbitトークン（アカウント情報）をもとに、指定期間の睡眠データを一括取得します。
 
 ### 📝 操作手順
-0．関谷さんに作成いただいたOneDrive上のアカウント情報のファイル名は、解析対象者識別番号が含まれています。これを、解析用識別番号に変換してください。
+0．研究対象者から提出いただいたファイル名は、研究対象者識別番号が含まれています。これを、解析用識別番号に変換してください。
 > 例 「token_T001.json」 → 「token_Y001.json」
 > ※トークンファイルは `token_解析ID.json` という形式で保存されている必要があります。
 
 
-1. 関谷さんに作成いただいたOneDrive上のアカウント情報が保存されているフォルダのパスを入力してください。
-> 例…C:/Users/21005/OneDrive - KAGOME/ドキュメント/CGM\Fitbit_AP/PythonCode/TestData
+1. 取得したい期間（試験期間）を選択してください。
 
 
-2. 取得したい期間（試験期間）を選択してください。
+2. ファイル名を変更したファイルをアップロードしてください。
 
 
 3. 「一括取得＆ZIPでダウンロード」ボタンを押してください。
@@ -57,58 +56,60 @@ st.markdown("""
 
 start_date = st.date_input("取得開始日", value=date.today() - timedelta(days=7))
 end_date = st.date_input("取得終了日", value=date.today())
-token_dir = st.text_input("フォルダのパス", value="./tokens")
 uploaded_files = st.file_uploader("トークンファイル（複数選択可）をアップロード", type="json", accept_multiple_files=True)
 
 if st.button("データ取得を開始"):
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
-        for uploaded_file in uploaded_files:
-            user_id = uploaded_file.name.replace("token_", "").replace(".json", "")
-            token_data = json.load(uploaded_file)
+    if not uploaded_files:
+        st.warning("少なくとも1つのトークンファイルをアップロードしてください。")
+    else:
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
+            for uploaded_file in uploaded_files:
+                user_id = uploaded_file.name.replace("token_", "").replace(".json", "")
+                token_data = json.load(uploaded_file)
 
-            # トークン更新
-            token_data = refresh_access_token(token_data)
-            if not token_data:
-                st.warning(f"{user_id} のトークン更新に失敗しました。スキップします。")
-                continue
+                # トークン更新
+                token_data = refresh_access_token(token_data)
+                if not token_data:
+                    st.warning(f"{user_id} のトークン更新に失敗しました。スキップします。")
+                    continue
 
-            access_token = token_data.get("access_token")
-            headers = {"Authorization": f"Bearer {access_token}"}
-            all_days = []
+                access_token = token_data.get("access_token")
+                headers = {"Authorization": f"Bearer {access_token}"}
+                all_days = []
 
-            for single_date in pd.date_range(start=start_date, end=end_date):
-                date_str = single_date.strftime("%Y-%m-%d")
-                url = f"https://api.fitbit.com/1.2/user/-/sleep/date/{date_str}.json"
-                r = requests.get(url, headers=headers)
-                d = r.json()
+                for single_date in pd.date_range(start=start_date, end=end_date):
+                    date_str = single_date.strftime("%Y-%m-%d")
+                    url = f"https://api.fitbit.com/1.2/user/-/sleep/date/{date_str}.json"
+                    r = requests.get(url, headers=headers)
+                    d = r.json()
 
-                if "sleep" in d and len(d["sleep"]) > 0:
-                    s = d["sleep"][0]
-                    levels = s.get("levels", {}).get("summary", {})
-                    total = sum(level.get("minutes", 0) for level in levels.values())
-                    row = {
-                        "date": date_str,
-                        "sleep_score": s.get("efficiency"),
-                        "start_time": s.get("startTime"),
-                        "end_time": s.get("endTime")
-                    }
-                    for k in ["deep", "light", "rem", "wake"]:
-                        minutes = levels.get(k, {}).get("minutes", 0)
-                        row[f"{k}_minutes"] = minutes
-                        row[f"{k}_pct"] = round((minutes / total * 100), 1) if total > 0 else 0
-                    all_days.append(row)
+                    if "sleep" in d and len(d["sleep"]) > 0:
+                        s = d["sleep"][0]
+                        levels = s.get("levels", {}).get("summary", {})
+                        total = sum(level.get("minutes", 0) for level in levels.values())
+                        row = {
+                            "date": date_str,
+                            "sleep_score": s.get("efficiency"),
+                            "start_time": s.get("startTime"),
+                            "end_time": s.get("endTime")
+                        }
+                         for k in ["deep", "light", "rem", "wake"]:
+                            minutes = levels.get(k, {}).get("minutes", 0)
+                            row[f"{k}_minutes"] = minutes
+                            row[f"{k}_pct"] = round((minutes / total * 100), 1) if total > 0 else 0
+                        all_days.append(row)
 
-            if all_days:
-                df = pd.DataFrame(all_days)
-                csv_bytes = df.to_csv(index=False).encode("utf-8-sig")
-                zipf.writestr(f"{user_id}_sleep_data.csv", csv_bytes)
+                if all_days:
+                    df = pd.DataFrame(all_days)
+                    csv_bytes = df.to_csv(index=False).encode("utf-8-sig")
+                    zipf.writestr(f"{user_id}_sleep_data.csv", csv_bytes)
 
-    zip_buffer.seek(0)
-    st.success("✅ データ取得が完了しました！以下からダウンロードしてください。")
-    st.download_button(
-        label="ZIPファイルをダウンロード",
-        data=zip_buffer,
-        file_name=f"fitbit_sleep_data_{start_date}_to_{end_date}.zip",
-        mime="application/zip"
-    )
+        zip_buffer.seek(0)
+        st.success("✅ データ取得が完了しました！以下からダウンロードしてください。")
+        st.download_button(
+            label="ZIPファイルをダウンロード",
+            data=zip_buffer,
+            file_name=f"fitbit_sleep_data_{start_date}_to_{end_date}.zip",
+            mime="application/zip"
+        )
