@@ -34,7 +34,8 @@ def refresh_access_token(token_data):
         token_data.update(new_token)
         return token_data
     else:
-        print("トークン更新失敗:", response.status_code, response.text)  # ← Debug出力（任意）
+        # 👇 エラー内容を Streamlit に表示する
+        st.error(f"トークン更新失敗: {response.status_code} - {response.text}")
         return None
 
 st.set_page_config(page_title="Fitbit睡眠データ一括取得", page_icon="📊")
@@ -90,6 +91,7 @@ if st.button("データ取得を開始"):
                     url = f"https://api.fitbit.com/1.2/user/-/sleep/date/{date_str}.json"
                     r = requests.get(url, headers=headers)
                     d = r.json()
+                    print(f"{user_id} - {date_str}: {d}")  # ← デバッグ用
 
                     if "sleep" in d and len(d["sleep"]) > 0:
                         s = d["sleep"][0]
