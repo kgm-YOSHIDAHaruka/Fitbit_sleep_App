@@ -94,7 +94,7 @@ if st.button("データ取得を開始"):
                             "start_time": s.get("startTime"),
                             "end_time": s.get("endTime")
                         }
-                         for k in ["deep", "light", "rem", "wake"]:
+                        for k in ["deep", "light", "rem", "wake"]:
                             minutes = levels.get(k, {}).get("minutes", 0)
                             row[f"{k}_minutes"] = minutes
                             row[f"{k}_pct"] = round((minutes / total * 100), 1) if total > 0 else 0
