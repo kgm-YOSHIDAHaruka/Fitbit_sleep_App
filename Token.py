@@ -91,7 +91,8 @@ if st.button("データ取得を開始"):
                     url = f"https://api.fitbit.com/1.2/user/-/sleep/date/{date_str}.json"
                     r = requests.get(url, headers=headers)
                     d = r.json()
-                    print(f"{user_id} - {date_str}: {d}")  # ← デバッグ用
+                    if "sleep" not in d or len(d["sleep"]) == 0:
+                        st.warning(f"{user_id} の {date_str} にデータがありませんでした。レスポンス: {d}")
 
                     if "sleep" in d and len(d["sleep"]) > 0:
                         s = d["sleep"][0]
@@ -113,6 +114,10 @@ if st.button("データ取得を開始"):
                     df = pd.DataFrame(all_days)
                     csv_bytes = df.to_csv(index=False).encode("utf-8-sig")
                     zipf.writestr(f"{user_id}_sleep_data.csv", csv_bytes)
+                    
+                    # ✅ トークンファイルもzipに保存（更新済）
+                    updated_token_json = json.dumps(token_data, indent=2, ensure_ascii=False)
+                    zipf.writestr(f"token_{user_id}.json", updated_token_json)
 
         zip_buffer.seek(0)
         st.success("✅ データ取得が完了しました！以下からダウンロードしてください。")
