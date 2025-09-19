@@ -95,6 +95,8 @@ uploaded_files = st.file_uploader(
     "トークンファイル（複数選択可）をアップロード", type="json", accept_multiple_files=True
 )
 
+DEBUG = st.checkbox("デバッグログをZIPに保存", value=True)
+
 if st.button("データ取得を開始"):
     if not uploaded_files:
         st.warning("少なくとも1つのトークンファイルをアップロードしてください。")
@@ -124,6 +126,16 @@ if st.button("データ取得を開始"):
 
                 access_token = token_data.get("access_token")
                 headers = {"Authorization": f"Bearer {access_token}"}
+
+                scopes = set(str(token_data.get("scope", "")).split())
+                if DEBUG:
+                    zipf.writestr(f"{user_id}_token_scopes.txt", " ".join(sorted(scopes)))
+                if "sleep" not in scopes:
+                    st.error(f"{user_id}: このトークンには 'sleep' スコープがありません。再認可が必要です。")
+                    # エラーログもZIPへ
+                    if DEBUG:
+                        zipf.writestr(f"errors/{user_id}_missing_scope.txt", "missing 'sleep' scope")
+                    continue
                 
                 # 出力用の入れ物
                 summary_rows = []
@@ -296,6 +308,7 @@ if st.button("データ取得を開始"):
                 file_name=f"fitbit_sleep_data_{start_date}_to_{end_date}.zip",
                 mime="application/zip"
             )
+
 
 
 
