@@ -18,37 +18,42 @@ import base64
 # ユーティリティ
 # -----------------------
 def refresh_access_token(token_data):
-refresh_url = "https://api.fitbit.com/oauth2/token"
-credentials = f"{token_data['client_id']}:{token_data['client_secret']}"
-credentials_b64 = base64.b64encode(credentials.encode()).decode()
-headers = {
-"Authorization": f"Basic {credentials_b64}",
-"Content-Type": "application/x-www-form-urlencoded"
-}
-data = {
-"grant_type": "refresh_token",
-"refresh_token": token_data["refresh_token"]
-}
-response = requests.post(refresh_url, headers=headers, data=data)
-if response.status_code == 200:
-new_token = response.json()
-token_data.update(new_token)
-return token_data
-else:
-st.error(f"トークン更新失敗: {response.status_code} - {response.text}")
-return None
+    refresh_url = "https://api.fitbit.com/oauth2/token"
+    credentials = f"{token_data['client_id']}:{token_data['client_secret']}"
+    credentials_b64 = base64.b64encode(credentials.encode()).decode()
+    headers = {
+        "Authorization": f"Basic {credentials_b64}",
+        "Content-Type": "application/x-www-form-urlencoded"
+        }
+    data = {
+        "grant_type": "refresh_token",
+        "refresh_token": token_data["refresh_token"],
+        }
+    try:
+        response = requests.post(refresh_url, headers=headers, data=data)
+    except Exception as e:
+        st.error(f"トークン更新失敗: ネットワーク例外 {e}")
+        return None
+    
+    if response.status_code == 200:
+        new_token = response.json()
+        token_data.update(new_token)
+        return token_data
+    else:
+        st.error(f"トークン更新失敗: {response.status_code} - {response.text}")
+        return None
 
 
 
 
 def safe_get(dct, *keys, default=None):
-"""ネストした辞書からキーを安全に取得する。"""
-cur = dct
-for k in keys:
-if not isinstance(cur, dict) or k not in cur:
-return default
-cur = cur[k]
-return cur
+    """ネストした辞書からキーを安全に取得する。"""
+    cur = dct
+    for k in keys:
+        if not isinstance(cur, dict) or k not in cur:
+            return default
+        cur = cur[k]
+    return cur
 
 
 # -----------------------
@@ -272,4 +277,5 @@ if st.button("データ取得を開始"):
                     file_name=f"fitbit_sleep_data_{start_date}_to_{end_date}.zip",
                     mime="application/zip"
                 )
+
 
