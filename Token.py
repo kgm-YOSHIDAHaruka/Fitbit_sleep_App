@@ -285,8 +285,8 @@ if st.button("データ取得を開始"):
                 "- *_sleep_levels_data.csv*: 30秒刻みのステージ列（dateTime, level, seconds）。\n"
                 "- *_sleep_levels_short.csv*: 短時間イベント列（dateTime, level, seconds）。\n"
                 "\n注意: Fitbit Web APIはSleep Score（点数）を提供しません。efficiencyはFitbit定義の睡眠効率です。\n"
-                )
-                zipf.writestr("README.txt", readme)
+            )
+            zipf.writestr("README.txt", readme)
                 
             zip_buffer.seek(0)
             st.success("✅ データ取得が完了しました！以下からダウンロードしてください。")
@@ -296,6 +296,7 @@ if st.button("データ取得を開始"):
                 file_name=f"fitbit_sleep_data_{start_date}_to_{end_date}.zip",
                 mime="application/zip"
             )
+
 
 
 
