@@ -266,21 +266,21 @@ if st.button("データ取得を開始"):
                 # ---- CSV 書き出し（ユーザー単位） ----
                 if summary_rows:
                     df_sum = pd.DataFrame(summary_rows)
-                    csv_bytes = df_sum.to_csv(index=False).encode("utf-8-sig")
-                    zipf.writestr(f"{user_id}_sleep_summary.csv", csv_bytes) 
+                    zipf.writestr(f"{user_id}_sleep_summary.csv",
+                                  df_sum.to_csv(index=False).encode("utf-8-sig"))
                 if levels_data_rows:
                     df_ld = pd.DataFrame(levels_data_rows)
-                    csv_bytes = df_ld.to_csv(index=False).encode("utf-8-sig")
-                    zipf.writestr(f"{user_id}_sleep_levels_data.csv", csv_bytes)
+                    zipf.writestr(f"{user_id}_sleep_levels_data.csv", 
+                                  df_ld.to_csv(index=False).encode("utf-8-sig"))
                 if levels_short_rows:
                     df_ls = pd.DataFrame(levels_short_rows)
-                    csv_bytes = df_ls.to_csv(index=False).encode("utf-8-sig")
-                    zipf.writestr(f"{user_id}_sleep_levels_short.csv", csv_bytes)
+                    zipf.writestr(f"{user_id}_sleep_levels_short.csv",
+                                  csv_bytes = df_ls.to_csv(index=False).encode("utf-8-sig"))
 
                                                            
                 # ✅ トークンファイルもzipに保存
-                updated_token_json = json.dumps(token_data, indent=2, ensure_ascii=False)
-                zipf.writestr(f"token_{user_id}.json", updated_token_json)
+                zipf.writestr(f"token_{user_id}.json", 
+                              json.dumps(token_data, indent=2, ensure_ascii=False))
                     
                 status_area.success(
                     f"[{idx}/{total_users}] {user_id}: 取得完了（summary={len(summary_rows)}行, levels_data={len(levels_data_rows)}行, levels_short={len(levels_short_rows)}行)"
@@ -300,14 +300,15 @@ if st.button("データ取得を開始"):
             )
             zipf.writestr("README.txt", readme)
                 
-            zip_buffer.seek(0)
-            st.success("✅ データ取得が完了しました！以下からダウンロードしてください。")
-            st.download_button(
-                label="ZIPファイルをダウンロード",
-                data=zip_buffer,
-                file_name=f"fitbit_sleep_data_{start_date}_to_{end_date}.zip",
-                mime="application/zip"
-            )
+        zip_buffer.seek(0)
+        st.success("✅ データ取得が完了しました！以下からダウンロードしてください。")
+        st.download_button(
+            label="ZIPファイルをダウンロード",
+            data=zip_buffer,
+            file_name=f"fitbit_sleep_data_{start_date}_to_{end_date}.zip",
+            mime="application/zip"
+        )
+
 
 
 
