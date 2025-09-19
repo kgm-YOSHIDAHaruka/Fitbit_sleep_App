@@ -275,7 +275,7 @@ if st.button("データ取得を開始"):
                 if levels_short_rows:
                     df_ls = pd.DataFrame(levels_short_rows)
                     zipf.writestr(f"{user_id}_sleep_levels_short.csv",
-                                  csv_bytes = df_ls.to_csv(index=False).encode("utf-8-sig"))
+                                  df_ls.to_csv(index=False).encode("utf-8-sig"))
 
                                                            
                 # ✅ トークンファイルもzipに保存
@@ -308,6 +308,7 @@ if st.button("データ取得を開始"):
             file_name=f"fitbit_sleep_data_{start_date}_to_{end_date}.zip",
             mime="application/zip"
         )
+
 
 
 
