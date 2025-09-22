@@ -127,6 +127,7 @@ if st.button("データ取得を開始"):
                 access_token = token_data.get("access_token")
                 headers = {"Authorization": f"Bearer {access_token}"}
 
+                #スコープ確認
                 scopes = set(str(token_data.get("scope", "")).split())
                 if DEBUG:
                     zipf.writestr(f"{user_id}_token_scopes.txt", " ".join(sorted(scopes)))
@@ -136,6 +137,56 @@ if st.button("データ取得を開始"):
                     if DEBUG:
                         zipf.writestr(f"errors/{user_id}_missing_scope.txt", "missing 'sleep' scope")
                     continue
+
+                #取得範囲
+                start_buf = (start_date - timedelta(days=1)).strftime("%Y-%m-%d")
+                end_buf = (end_date + timedelta(days=1)).strftime("%Y-%m-%d")
+                start_str = start_date.strftime("%Y-%m-%d")
+                end_str = end_date.strftime("%Y-%m-%d")
+
+                url = f"https://api.fitbit.com/1.2/user/-/sleep/date/{start_buf}/{end_buf}.json"
+                try:
+                    r = requests.get(url, headers=headers, timeout=60)
+                except Exception as e:
+                    if DEBUG:
+                        zipf.writestr(f"errors/{user_id}_range_request.txt", f"Exception: {e}")
+                    continue
+
+                if DEBUG:
+                    remain = r.headers.get("fitbit-rate-limit-remaining", "")
+                    zipf.writestr(
+                        f"debug/{user_id}_range_status.txt",
+                        f"status={r.status_code} remain={remain}
+url={url}"
+                    )
+
+                if r.status_code != 200:
+                    if DEBUG:
+                        zipf.writestr(f"errors/{user_id}_range_status.txt", r.text[:2000])
+                    continue
+
+                try:
+                    d = r.json()
+                except Exception as e:
+                    if DEBUG:
+                        zipf.writestr(
+                            f"errors/{user_id}_range_json.txt",
+                            f"JSON error: {e}
+
+{r.text[:2000]}"
+                        )
+                    continue
+
+                sleeps = d.get("sleep", []) if isinstance(d, dict) else []
+                if DEBUG:
+                    zipf.writestr(
+                        f"debug/{user_id}_range.json",
+                        json.dumps({"count": len(sleeps), "sample": sleeps[:2]}, ensure_ascii=False, indent=2)
+                    )
+                    if not sleeps:
+                        status_area.warning(f"{user_id}: 指定期間に睡眠ログなし")
+
+                
                 
                 # 出力用の入れ物
                 summary_rows = []
@@ -308,6 +359,7 @@ if st.button("データ取得を開始"):
             file_name=f"fitbit_sleep_data_{start_date}_to_{end_date}.zip",
             mime="application/zip"
         )
+
 
 
 
