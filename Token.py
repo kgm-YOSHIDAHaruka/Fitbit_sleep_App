@@ -157,7 +157,7 @@ if st.button("データ取得を開始"):
                     zipf.writestr(
                         f"debug/{user_id}_range_status.txt",
                         f"status={r.status_code} remain={remain}
-url={url}"
+                        url={url}"
                     )
 
                 if r.status_code != 200:
@@ -172,8 +172,7 @@ url={url}"
                         zipf.writestr(
                             f"errors/{user_id}_range_json.txt",
                             f"JSON error: {e}
-
-{r.text[:2000]}"
+                            {r.text[:2000]}"
                         )
                     continue
 
@@ -359,6 +358,7 @@ url={url}"
             file_name=f"fitbit_sleep_data_{start_date}_to_{end_date}.zip",
             mime="application/zip"
         )
+
 
 
 
