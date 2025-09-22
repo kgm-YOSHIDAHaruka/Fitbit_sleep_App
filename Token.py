@@ -108,6 +108,7 @@ if st.button("データ取得を開始"):
         status_area = st.empty()
         
         zip_buffer = io.BytesIO()
+        processed_ids = []
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
             for idx, uploaded_file in enumerate(uploaded_files, start=1):
                 user_id = uploaded_file.name.replace("token_", "").replace(".json", "")
@@ -339,6 +340,7 @@ if st.button("データ取得を開始"):
                     f"[{idx}/{total_users}] {user_id}: 取得完了（summary={len(summary_rows)}行, levels_data={len(levels_data_rows)}行, levels_short={len(levels_short_rows)}行)"
                 )
                 pbar.progress(int(idx / total_users * 100))
+                processed_ids.append(user_id)
                 
             # README（列説明の簡易版）
             readme = (
@@ -352,15 +354,27 @@ if st.button("データ取得を開始"):
                 "\n注意: Fitbit Web APIはSleep Score（点数）を提供しません。efficiencyはFitbit定義の睡眠効率です。\n"
             )
             zipf.writestr("README.txt", readme)
+
+        if len(processed_ids) == 1:
+            id_part = processed_ids[0]
+        elif len(processed_ids) > 1:
+            id_part = f"{processed_ids[0]}_and_{len(processed_ids)-1}more"
+        else:
+            id_part = "no_user"
+
+        start_str = start_date.strftime("%Y-%m-%d")
+        end_str   = end_date.strftime("%Y-%m-%d")
+        zip_filename = f"fitbit_sleep_data_{id_part}_{start_str}_{end_str}.zip"
                 
         zip_buffer.seek(0)
         st.success("✅ データ取得が完了しました！以下からダウンロードしてください。")
         st.download_button(
             label="ZIPファイルをダウンロード",
             data=zip_buffer,
-            file_name=f"fitbit_sleep_data_{start_date}_to_{end_date}.zip",
+            file_name=zip_filename,
             mime="application/zip"
         )
+
 
 
 
